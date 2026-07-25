@@ -1,0 +1,36 @@
+{
+  "name": "pltgames-backend",
+  "version": "1.0.0",
+  "description": "Pltgame backend",
+  "homepage": "https://github.com/adokun15/pocketleague#readme",
+  "bugs": {
+    "url": "https://github.com/adokun15/pocketleague/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adokun15/pocketleague.git"
+  },
+  "license": "ISC",
+  "author": "Ohida",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+   "dev": "tsx --watch --env-file .env.development src/index.ts",
+   "dev:staging": "tsx --watch --env-file .env.staging src/index.ts", 
+   "dev:prod": "tsx --watch --env-file .env.production src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "type-checker": "tsx --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.5",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.1",
+    "tsx": "^4.21.0",
+    "typescript": "^7.0.2"
+  }
+}
