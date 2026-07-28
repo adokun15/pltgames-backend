@@ -1,5 +1,4 @@
-import { Pool } from "pg";
-
+/*
 // Create a connection pool
 const pool = new Pool({
   host:"",
@@ -19,14 +18,29 @@ const pool = new Pool({
 pool.on("connect", (client) => {
   console.log("DB connected!");
 });
-// export default pool;
-// for supabase postgres
-
-/*import { Pool } from "pg";
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-   // Supabase-specific optimizations
-  max: 20, // Maximum number of clients in the pool
-});
-*/
 export default pool;
+*/
+import { Pool } from 'pg'
+ 
+const pool = new Pool({
+  user: 'dbuser',
+  password: 'secretpassword',
+  host: 'database.server.com',
+  port: 3211,
+  database: 'mydb',
+})
+ 
+/*
+const client = new Client({
+  user: 'dbuser',
+  password: 'secretpassword',
+  host: 'database.server.com',
+  port: 3211,
+  database: 'mydb',
+})
+ 
+await client.connect()
+ 
+console.log(await client.query('SELECT NOW()'))
+ 
+await client.end()*/

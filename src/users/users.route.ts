@@ -2,17 +2,15 @@
 import { Router } from 'express';
 import { GetSingleUserInfoController, GetUserController } from './users.controller.js';
 
-const router = Router();
+const UserRouter = Router();
 
 //With Session Token FROM CHALLONGE API
-router.route('/user')
+UserRouter.route('/')
 .get(GetUserController)
 
 //Public
-router.route('/user/:username')
+UserRouter.route('/:username')
 .get(GetSingleUserInfoController)
 
 
-
-
-export default router;
+export default UserRouter;
