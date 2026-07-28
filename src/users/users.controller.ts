@@ -1,21 +1,36 @@
-import { Response, Request} from "express";
+import { Response, Request, NextFunction} from "express";
+import { GetSingleUserByUserIdService, GetSingleUserByUserNameService,  } from "./users.service";
 
-export const LoginUserController = (req: Request, res: Response) => {
-}
-export const GetUserController = (req: Request, res: Response) => {
-  /*   
-  try {
-    const result = await ApplicationService(req.body);
-    if(result.success){
-      res.status(200).json(result)
-    } else{
-      res.status(400).json(result)
-    }
-    
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
-    
+//Public and Private; can only get certain data based on authenticated or not;
+export const GetUserController = async(req: Request, res: Response, next: NextFunction) => {
+  const userId = ""; //By token; Get UserId;
+
+  if(!userId) return 
+
+  try{
+    const user = await GetSingleUserByUserIdService(userId as string)
+    res.status(200).json( {
+      status: true,
+      data : user,
+  }) 
+  } catch(e){
+    next(e)
   }
-
-  */
 }
+
+export const GetSingleUserInfoController = async(req: Request, res: Response, next: NextFunction) => {
+  const {username} = req.params;
+
+  if(!username) return 
+
+  try{
+    const user = await GetSingleUserByUserNameService(username as string)
+    res.status(200).json( {
+      status: true,
+    data : user,
+  }) 
+  } catch(e){
+    next(e)
+  }
+}
+

@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { AutoSyncFromChallongeParticipantsService, BulkUpdateParticipantsService, CreateParticipantForTournamentService, FetchAllTournamentParticipantsService, FetchSingleTournamentParticipantService, LeaveParticipantAsTournamentService, UpdateSingleParticipantForTournamentService } from "./participants.service";
-import { ParticipantType } from "@/utils/challonge/challongeTypes";
-
 
 //Join Tournament controller: player
 export const CreateParticipantController = async (req: Request, res: Response, next: NextFunction) => {
