@@ -43,19 +43,19 @@ app.use(cors());
 app.use(express.json());
 
 //Auth
-app.use("/oauth", AuthRouter);
+app.use("/v1/oauth", AuthRouter);
 
 //User
-app.use("/user", UserRouter);
+app.use("/v1/user", UserRouter);
 
 //Tournament
-app.use("/tournaments", UserRouter);
+app.use("/v1/tournaments", UserRouter);
 
 //Matches
-app.use('/matches', matchRouter)
+app.use('/v1/matches', matchRouter)
 
 //participants
-app.use('/participants', participantRouter);
+app.use('/v1/participants', participantRouter);
 
 //Bot Control
 //app.use('/discord_bot');

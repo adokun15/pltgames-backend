@@ -1,7 +1,9 @@
 //MATCHES 
 
+import pool from "@/utils/database";
+
 //GET ALL MATCHES: based on tournament for now;
-export function GetTournamentMatches(){
+export async function GetTournamentMatches(query){
     const res = await pool.query(
       `
       INSERT INTO stores(merchant_id, category, name, slug)
