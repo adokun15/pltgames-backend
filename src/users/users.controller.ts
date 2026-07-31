@@ -3,12 +3,8 @@ import { GetSingleUserByUserIdService, GetSingleUserByUserNameService,  } from "
 
 //Public and Private; can only get certain data based on authenticated or not;
 export const GetUserController = async(req: Request, res: Response, next: NextFunction) => {
-  const userId = ""; //By token; Get UserId;
-
-  if(!userId) return 
-
   try{
-    const user = await GetSingleUserByUserIdService(userId as string)
+    const user = await GetSingleUserByUserIdService(req.userId as string)
     res.status(200).json( {
       status: true,
       data : user,

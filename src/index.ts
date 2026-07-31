@@ -46,7 +46,7 @@ app.use(express.json());
 app.use("/oauth", AuthRouter);
 
 //User
-app.use("/users", UserRouter);
+app.use("/user", UserRouter);
 
 //Tournament
 app.use("/tournaments", UserRouter);

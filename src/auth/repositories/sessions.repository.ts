@@ -27,11 +27,26 @@ try{
 
 export async function GetSessionInDb(identifier: string){
    try {
+ /*
+ SELECT *
+FROM user_sessions
+WHERE refresh_token = $1
+   OR  id = $1
+
+   The above query keeps breaking because cannot 
+   force a single parameterized query to have two type;
+   Tyoe casting do not work with UUID and TEXT; 
+      );
  
+ */
         const query = {
-  text: `select * from user_sessions
-         where refresh_token = $1 or session_id = $1;         
-        `,
+  text: `SELECT *
+FROM user_sessions
+WHERE refresh_token = $1
+   OR (
+        $1 ~* '^[0-9a-fA-F-]{36}$'
+        AND id = $1::uuid
+      ); `,
   values: [identifier],
 }
  

@@ -7,13 +7,20 @@ export async function GetSingleUserByUserNameService(username:string) {
     try{
         const user = await GetUserFromDb(username);
         console.log(user)
-        return { message: 'okay done!'};
+        return user;
     }catch(e){
         console.log(e)
     }
-
 }
 
 
 //Authorize: more data is released;
-export async function GetSingleUserByUserIdService(userId: string) {}
+export async function GetSingleUserByUserIdService(userId: string) {
+    try{
+        const user = await GetUserFromDb(userId);
+        console.log(user)
+        return user;
+    }catch(e){
+        console.log(e)
+    }
+}

@@ -69,8 +69,6 @@ export async function ExchangeCodeForToken(code: string) {
   const accessToken = jwt.sign(
     {
         challonge_id: user.challonge_id,
-        username: user.username,
-        email: user.email
       },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" }

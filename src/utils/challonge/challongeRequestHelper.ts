@@ -53,16 +53,14 @@ export async function ChallongeUserRequestHelper(body: ChallongeRequest)  {
     try {
         const res = await ChallongeHelper(body);
         
-        console.log(res)
-
         if(!res?.data){
             return {
                 error: 'USER_NOT_FOUND',
                 error_description : "This user does not exist found or token is invalid"
             }
         }
-        const {
-        	id: challonge_id,
+        const { 
+        id: challonge_id,
 		attributes: {
 			email,
 			username,

@@ -12,15 +12,14 @@ export const GetUserFromDb = async (identifier: string) => {
         `,
   values: [identifier],
 }
- 
+
         const res = await pool.query(query);
      
      if (!res.rows.length) {
-      //throw new CustomError("Merchant not Found", 404);
-      return {};
-    }
+         return null;
+     }
     
-    return res.rows[0];
+    return res.rows[0] ;
 } catch (e) {
     console.log(e);
     //throw new CustomError(e?.message);
