@@ -25,6 +25,8 @@ app.listen(port, () => {
 
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import dotenv from "dotenv";
 import UserRouter from './users/users.route';
 import matchRouter from './matches/matches.route';
 import participantRouter from './participants/participants.route';
@@ -34,6 +36,9 @@ import AuthRouter from './auth/auth.route';
 const app = express();
 const PORT = 3000;
 
+dotenv.config({ path: ".env.local" });
+
+app.use(cookieParser())
 app.use(cors());
 app.use(express.json());
 
@@ -54,7 +59,6 @@ app.use('/participants', participantRouter);
 
 //Bot Control
 //app.use('/discord_bot');
-
 
 app.get('/', (req, res) => {
   res.send('Welcome to Pltgames API!');

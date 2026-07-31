@@ -9,7 +9,7 @@ END$$;
 CREATE TABLE IF NOT EXISTS users (
 	challonge_id VARCHAR(10) PRIMARY KEY,
 	username TEXT NOT NULL UNIQUE,
-	role user_role_type DEFAULT 'player',
+	role user_role_type  DEFAULT 'player',
 	avatar TEXT,
 	email TEXT,
 	updated_at TIMESTAMPTZ DEFAULT NOW(),
