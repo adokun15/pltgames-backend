@@ -17,6 +17,42 @@ type ChallongeAuthResponseBody = {
     error_description?: string
 }
 
+type TournamentBody = {
+    //id: string,
+	tournament_name: string,
+	challonge_tournament_id: number,
+    description?: string,
+    current_participants_count: number,
+    slug: string,
+    min_team_size: number,
+    max_team_size: number,
+    isPrivate: boolean,
+    state: string,
+    game_name: string,
+    tournament_type: string,
+    max_signup: number,
+    progress: number,
+    check_in_duration: number,
+    includeteams: boolean,
+    gameroom?: string,
+    poster_url?: string,
+    starts_at?: string,
+    started_at?: string,
+    completed_at?: string,
+    last_synced?: string,
+    updated_at?: string,
+	created_at?: number,
+    organizer_id?: string,
+    group_stage_enabled?: boolean, 
+    group_stage_options?: JSON, 
+    double_elimination_options?: JSON, 
+   // single_elimination_options?: JSON, 
+    round_robin_options?: JSON, 
+    swiss_options?: JSON, 
+    free_for_all_options?: JSON, 
+    error?: string,
+    error_description?: string
+}
 
 //Change authcode for token
 export async function ChallongeHelper(body: ChallongeRequest)  {
@@ -36,7 +72,7 @@ export async function ChallongeHelper(body: ChallongeRequest)  {
        }
 
         //Reach out for token exchahnge
-        const makeRequest = await fetch(`https://api.challonge.com${body.path}`, { ...req, headers: {
+        const makeRequest = await fetch(`https://api.challonge.com/v2.1${body.path}`, { ...req, headers: {
                 "Authorization": body.authorization,
                 "Accept": 'application/json',
                 "Authorization-Type": body.authorization_version,
@@ -62,18 +98,97 @@ export async function ChallongeUserRequestHelper(body: ChallongeRequest)  {
         const { 
         id: challonge_id,
 		attributes: {
-			email,
+            email,
 			username,
 			image_url, 
 		}
-        } = res?.data;
-       return {
+    } = res?.data;
+    return {
         challonge_id, email, username, avatar: image_url
-       } 
-    }catch(e){
+    } 
+}catch(e){
         console.log(e)
     }
 }
+
+//TOURNAMENTS
+export async function ChallongeTournamentRequestHelper(body: ChallongeRequest) {
+    try {
+    const res = await ChallongeHelper(body);
+        
+    if (!res) {
+      return {
+        error: "NO_RESPONSE",
+        error_description: "No response from Challonge",
+      };
+    }
+    
+    if (res.error) {
+      return {
+        error: res.error,
+        error_description: res.error_description || "Challonge error",
+      };
+    }
+    
+    if (!Array.isArray(res.data)) {
+        return {
+            error: "INVALID_DATA",
+        error_description: "Unexpected data format",
+      };
+    }
+
+    const re_shaped = res?.data.map((t: any) =>({ 
+   	tournament_name: t.attributes.name,
+	challonge_tournament_id: t.id,
+    description: t.attributes.description,
+    current_participants_count: t.attributes.participants_count,
+    slug: t.attributes.url,
+    tournament_type: t.attributes.tournament_type,
+    min_team_size: t.attributes.min_team_size,
+    max_team_size: t.attributes.max_team_size,
+    isPrivate: t.attributes.private,
+    state: t.attributes.state,
+    game_name: t.attributes.game_name,
+    max_signup: t.attributes.registration_options?.signup_cap,
+    progress:t.attributes.progress_meter,
+    check_in_duration: t.attributes.registration_options.check_in_duration,
+    includeteams: t.attributes.teams,
+    gameroom: 'discord-community-link',
+    poster_url: t.attributes.live_image_url,
+    starts_at: t.attributes.starts_at,
+    started_at: t.attributes.timestamps?.started_at,
+    completed_at: t.attributes.timestamps?.completed_at,
+    last_synced: null,
+    updated_at: t.attributes.timestamps?.updated_at,
+	created_at: t.attributes.timestamps?.created_at,
+    organizer_id: t.relationships?.organizer?.data?.id,
+    group_stage_enabled: t.attributes.group_stage_enabled, 
+    group_stage_options: t.attributes?.group_stage_options || null, 
+    double_elimination_options: t.attributes?.double_elimination_options || null, 
+    round_robin_options:  t.attributes?.round_robin_options || null, 
+    swiss_options:  t.attributes?.swiss_options || null, 
+    free_for_all_options:  t.attributes?.free_for_all_options || null 
+    }))
+    
+    const data = re_shaped as TournamentBody[];
+    console.log(re_shaped)
+    return re_shaped
+    }catch(e){
+        console.log(e)
+    
+    console.error("fetchTournaments error:", e);
+
+    return {
+      error: "INTERNAL_ERROR",
+      error_description: "Something went wrong",
+     };
+  
+    }
+}
+
+
+
+ 
 
 export async function ChallongeAuthRequestHelper(body: ChallongeRequest)  {
     try{

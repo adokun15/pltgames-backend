@@ -31,6 +31,7 @@ import UserRouter from './users/users.route';
 import matchRouter from './matches/matches.route';
 import participantRouter from './participants/participants.route';
 import AuthRouter from './auth/auth.route';
+import tournamentRouter from './tournaments/tournaments.route';
 //import { errorHandler, methodNotAllowedHandler, notFoundHandler } from './middleware/errorhandler.middleware';
 
 const app = express();
@@ -49,7 +50,7 @@ app.use("/v1/oauth", AuthRouter);
 app.use("/v1/user", UserRouter);
 
 //Tournament
-app.use("/v1/tournaments", UserRouter);
+app.use("/v1/tournaments", tournamentRouter);
 
 //Matches
 app.use('/v1/matches', matchRouter)

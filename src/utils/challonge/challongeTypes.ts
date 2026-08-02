@@ -1,3 +1,4 @@
+
 //Types 
 export type FilterTournamentsTypes = {
     communityId?: string,
