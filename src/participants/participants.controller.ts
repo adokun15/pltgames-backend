@@ -1,17 +1,15 @@
 import { NextFunction, Request, Response } from "express";
-import { AutoSyncFromChallongeParticipantsService, BulkUpdateParticipantsService, CreateParticipantForTournamentService, FetchAllTournamentParticipantsService, FetchSingleTournamentParticipantService, LeaveParticipantAsTournamentService, UpdateSingleParticipantForTournamentService } from "./participants.service";
+import { ManualSyncFromChallongeParticipantsService, BulkUpdateParticipantsService, CreateParticipantForTournamentService, FetchAllTournamentParticipantsService, FetchSingleTournamentParticipantService, LeaveParticipantAsTournamentService } from "./participants.service";
 
 //Join Tournament controller: player
 export const CreateParticipantController = async (req: Request, res: Response, next: NextFunction) => {
-   //Extract tournament Id;
+   //Econst { tournament_id }urnament Id;
    const { tournament_id } = req.query;
+   const userId = req.userId;
    const { data } = req.body;
    
-  //Parse and check if parameters are valid;
-  if(!tournament_id){}
-
   try{
-    const participant = await CreateParticipantForTournamentService(data, tournament_id as string,)
+    const participant = await CreateParticipantForTournamentService(data, tournament_id as string, userId)
     res.status(201).json({
         status: true,
         data: { participant }
@@ -46,6 +44,8 @@ export const AllParticipantsController = async (req: Request, res:Response, next
    const { tournament_id } = req.query;
    const { page, per_page} = req.query;
 
+   //Check if tournament_id query is a number!!
+
   //Check per_page and page limit;
   if(page && Number(page) < 1 && Number(page) > 100){
     //Error Exceeded 
@@ -59,7 +59,7 @@ export const AllParticipantsController = async (req: Request, res:Response, next
     const participants = await FetchAllTournamentParticipantsService(tournament_id as string, { page: page as string, per_page: per_page as string})
     res.status(201).json({
         status: true,
-        data: { participants }
+        data: participants 
     }) 
 }catch(e){
     next(e)
@@ -71,22 +71,20 @@ export const SingleParticipantController = async (req: Request, res: Response, n
    const { tournament_id } = req.query;
    const { participant_id } = req.params;
    
-  //Parse and check if parameters are valid;
-  if(!tournament_id){
-    //Throw error;
-  }
+   //Check if tournament_id and participant_id query is a number 
 
   try{
     const single_participant = await FetchSingleTournamentParticipantService(tournament_id as string, participant_id as string)
     res.status(201).json({
         status: true,
-        data: { single_participant }
+        data: single_participant 
     }) 
 }catch(e){
     next(e)
   }
 } 
 
+/*
 //Possible to update once by authorizes user;
 export const UpdateParticipantController = async (req: Request, res:Response, next: NextFunction) => {
    //Extract params;
@@ -104,7 +102,7 @@ export const UpdateParticipantController = async (req: Request, res:Response, ne
     next(e)
   }
 } 
-
+*/
 
 /*CRON JOBS*/
 export const BulkParticipantsUpdateController = async (req: Request, res:Response, next: NextFunction) => {
@@ -118,7 +116,7 @@ export const BulkParticipantsUpdateController = async (req: Request, res:Respons
   }
 
   try{
-    const participant = await BulkUpdateParticipantsService({ tournament_id: tournament_id as string , participant_ids: participant_ids as string[]})
+    const participant = await BulkUpdateParticipantsService()
     res.status(201).json({
         status: true,
         data: { message: 'success' }
@@ -129,16 +127,12 @@ export const BulkParticipantsUpdateController = async (req: Request, res:Respons
 } 
 
 
-export const SyncParticipantsController = async (req: Request, res:Response, next: NextFunction) => {
-   //Use Special auth middleware for this
-
-    //Fetch from Database (Challonge);
+export const ManualSyncParticipantsController = async (req: Request, res:Response, next: NextFunction) => {
+   //Use Special aut middleware for this
    
-  //Then
-
-  //Update Local Db
-  try{
-    const sync_participants = await AutoSyncFromChallongeParticipantsService()
+   //Use bot to manual sync this; application_tokeno' 
+   try{
+    const sync_participants = await ManualSyncFromChallongeParticipantsService()
     res.status(201).json({
         status: true,
         data: { sync_participants }

@@ -1,58 +1,4 @@
-type ChallongeRequest = {
-    path: string,
-    body_content?: object,
-    method?: string | null,
-    authorization: string,
-    authorization_version: string
-}
-
-type ChallongeAuthResponseBody = {
-	access_token: string,    
-	expires_in: number,
-	refresh_token: string,
-	token_type?: string,
-	scope?: string,
-	created_at?: number
-    error?: string,
-    error_description?: string
-}
-
-type TournamentBody = {
-    //id: string,
-	tournament_name: string,
-	challonge_tournament_id: number,
-    description?: string,
-    current_participants_count: number,
-    slug: string,
-    min_team_size: number,
-    max_team_size: number,
-    isPrivate: boolean,
-    state: string,
-    game_name: string,
-    tournament_type: string,
-    max_signup: number,
-    progress: number,
-    check_in_duration: number,
-    includeteams: boolean,
-    gameroom?: string,
-    poster_url?: string,
-    starts_at?: string,
-    started_at?: string,
-    completed_at?: string,
-    last_synced?: string,
-    updated_at?: string,
-	created_at?: number,
-    organizer_id?: string,
-    group_stage_enabled?: boolean, 
-    group_stage_options?: JSON, 
-    double_elimination_options?: JSON, 
-   // single_elimination_options?: JSON, 
-    round_robin_options?: JSON, 
-    swiss_options?: JSON, 
-    free_for_all_options?: JSON, 
-    error?: string,
-    error_description?: string
-}
+import { ChallongeAuthResponseBody, ChallongeRequest, ParticipantBody, TournamentBody } from "./challongeTypes";
 
 //Change authcode for token
 export async function ChallongeHelper(body: ChallongeRequest)  {
@@ -111,7 +57,102 @@ export async function ChallongeUserRequestHelper(body: ChallongeRequest)  {
     }
 }
 
-//TOURNAMENTS
+//PARTICIPANT List
+export async function ChallongeParticipantRequestHelper(body: ChallongeRequest)   {
+    try {
+        const res = await ChallongeHelper(body);
+     
+           
+    if (!res) {
+      return {
+        error: "NO_RESPONSE",
+        error_description: "No response from Challonge",
+      };
+    }
+    
+    if (res.error) {
+      return {
+        error: res.error,
+        error_description: res.error_description || "Challonge error",
+      };
+    }
+    
+    if (!Array.isArray(res.data)) {
+        return {
+            error: "INVALID_DATA",
+        error_description: "Unexpected data format",
+      };
+    }
+
+    const re_shaped = res?.data.map((p) =>({
+            challonge_participant_id: p?.id ,
+            name: p.attributes.name,
+           seed: p.attributes?.seed,
+           group_id: p.attributes.group_id,
+           tournament_id: p.attributes.tournament_id,
+           username: p.attributes?.username,
+           final_rank: p.attributes?.final_rank,
+           misc: p.attributes?.misc,
+           isactive: p.attributes.states.active,
+        }))
+
+    return re_shaped as ParticipantBody[];
+    }catch(e){
+    console.log(e)    
+
+    return {
+      error: "INTERNAL_ERROR",
+      error_description: "Something went wrong",
+     };
+  
+    }
+}
+
+//Bulk Update Participants
+export async function ChallongeBulkParticipantHelper(body: ChallongeRequest)  {
+    try {
+    const res = await ChallongeHelper(body);
+     
+    if (!res) {
+      return {
+        error: "NO_RESPONSE",
+        error_description: "No response from Challonge",
+      };
+    }
+    
+    if (res.error) {
+      return {
+        error: res.error,
+        error_description: res.error_description || "Challonge error",
+      };
+    }
+    
+    if (!Array.isArray(res.data)) {
+        return {
+            error: "INVALID_DATA",
+        error_description: "Unexpected data format",
+      };
+    }
+
+    const re_shaped = res?.data.map((p: any) =>({
+            challonge_participant_id: p?.id ,
+           username: p.attributes?.username,
+        }))
+
+    console.log(re_shaped)
+    return re_shaped as { challonge_participant_id: string, username: string}[];
+    }catch(e){
+    console.log(e)    
+
+    return {
+      error: "INTERNAL_ERROR",
+      error_description: "Something went wrong",
+     };
+  
+    }
+}
+
+// -- TOURNAMENTS
 export async function ChallongeTournamentRequestHelper(body: ChallongeRequest) {
     try {
     const res = await ChallongeHelper(body);
@@ -187,9 +228,7 @@ export async function ChallongeTournamentRequestHelper(body: ChallongeRequest) {
 }
 
 
-
- 
-
+//AUTHORIZATION;
 export async function ChallongeAuthRequestHelper(body: ChallongeRequest)  {
     try{
         let req : object = {};
@@ -219,7 +258,6 @@ export async function ChallongeAuthRequestHelper(body: ChallongeRequest)  {
             }, })
 
             const response : ChallongeAuthResponseBody = await makeRequest.json();
-            
             
             return response;
        

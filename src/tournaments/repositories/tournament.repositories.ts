@@ -6,6 +6,11 @@ interface TournamentsFilter {
   direction?: "ASC" | "DESC";
   offset?:number;
   limit?: number;
+  
+  //Filter tournament by creation;
+  created_after?: Date;
+  state?: string;
+  type?: string
 }
 
 // Pre
@@ -24,7 +29,7 @@ export async function GetAllTournaments(filter?: TournamentsFilter) {
     offset = 0,
     limit = 10,
   } = filter || {};
-
+  
   //Prevent random string from injecting SQL
   const orderColumn = ORDERABLE_FIELDS[orderBy];
 
