@@ -1,5 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { BulkMatchUpdateService, FetchAllTournamentMatchesService, FetchSingleTournamentMatchService, SingleMatchUpdateService } from "./matches.service";
+import { 
+   BulkUpdateAllMatchesService,
+    FetchAllTournamentMatchesService, 
+   FetchSingleTournamentMatchService,
+  //  SingleMatchUpdateService 
+  } from "./matches.service";
 
 //Control top route layer: Prevent abuse (ratelimit) and Unauthorized access;
 export const AllMatchesController = async (req: Request, res:Response, next: NextFunction) => {
@@ -39,7 +44,8 @@ export const AllMatchesController = async (req: Request, res:Response, next: Nex
 //Control top route layer: Prevent abuse (ratelimit);
 export const SingleMatchController = async (req: Request, res:Response, next: NextFunction) => {
    //Extract params;
-   const { tournament_id } = req.params;
+   const { tournament_id } = req.query;
+   const { match_id } = req.params;
    
   //Parse and check if parameters are valid;
   if(!tournament_id){
@@ -47,16 +53,20 @@ export const SingleMatchController = async (req: Request, res:Response, next: Ne
   }
 
   try{
-    const match = await FetchSingleTournamentMatchService(tournament_id as string)
-    res.status(201).json({
+    if(typeof match_id === "string" &&
+       typeof tournament_id  === "string"){
+      const match = await FetchSingleTournamentMatchService(tournament_id, match_id)
+      res.status(201).json({
         status: true,
         data: { match }
-    }) 
+      }) 
+    }
 }catch(e){
     next(e)
   }
 } 
 
+/*
 export const UpdateMatchController = async (req: Request, res:Response, next: NextFunction) => {
    //Extract params;
    const { tournament_id } = req.body;
@@ -77,6 +87,7 @@ export const UpdateMatchController = async (req: Request, res:Response, next: Ne
     next(e)
   }
 } 
+*/
 
 export const BulkMatchUpdateController = async (req: Request, res:Response, next: NextFunction) => {
    //Extract params;
@@ -89,7 +100,7 @@ export const BulkMatchUpdateController = async (req: Request, res:Response, next
   }
 
   try{
-    const match = await BulkMatchUpdateService({ tournament_id, match_ids: match_ids as string[], round: Number(round)})
+    const match = await BulkUpdateAllMatchesService()
     res.status(201).json({
         status: true,
         data: { message: 'success' }

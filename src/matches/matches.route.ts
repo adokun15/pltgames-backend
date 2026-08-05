@@ -1,7 +1,7 @@
 //Matches routes
 
 import { Router } from "express";
-import { AllMatchesController, BulkMatchUpdateController, SingleMatchController, UpdateMatchController } from "./matches.controller";
+import { AllMatchesController, BulkMatchUpdateController, SingleMatchController } from "./matches.controller";
 
 const matchRouter = Router();
 
@@ -15,6 +15,6 @@ matchRouter.post('/bulk_sync', BulkMatchUpdateController);
 //Single Match: Update(private) and Fetch(public);
 matchRouter.route("/:match_id")
 .get(SingleMatchController)
-.patch(UpdateMatchController);
+//.patch(UpdateMatchController);
 
 export default matchRouter

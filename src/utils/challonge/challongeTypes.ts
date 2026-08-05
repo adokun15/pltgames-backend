@@ -98,3 +98,47 @@ export type TournamentBody = {
     error?: string,
     error_description?: string
 }
+
+export type matchResType = {
+        data: {
+            id: string,
+            type: string,
+            attributes: {
+                state: string, //enum
+                round: number,
+                identifier: string,
+                suggested_play_order: number,
+                scores: string,
+                score_in_sets: [number, number][],
+                points_by_participant: {
+                        participant_id: number,
+                        scores: number[]
+                    }[],
+                timestamps: {
+                    created_at: Date,
+                    updated_at: Date,
+                },
+                winner_id: number,
+                relationships: {
+                    player1: {
+                        data: {
+                            id: string,
+                            type: string
+                        }
+                    },
+                    player2: {
+                        data: {
+                            id: string,
+                            type: string
+                        }
+                    }
+                }
+            }
+        }[]
+     } | {
+        detail: string,
+        status: number,
+        source: {
+            pointer: string
+        }
+    }[]

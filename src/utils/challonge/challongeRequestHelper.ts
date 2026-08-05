@@ -1,4 +1,8 @@
-import { ChallongeAuthResponseBody, ChallongeRequest, ParticipantBody, TournamentBody } from "./challongeTypes";
+import { ChallongeAuthResponseBody, ChallongeRequest, matchResType, ParticipantBody, TournamentBody } from "./challongeTypes";
+
+
+
+
 
 //Change authcode for token
 export async function ChallongeHelper(body: ChallongeRequest)  {
@@ -143,13 +147,44 @@ export async function ChallongeBulkParticipantHelper(body: ChallongeRequest)  {
     return re_shaped as { challonge_participant_id: string, username: string}[];
     }catch(e){
     console.log(e)    
-
+    
     return {
       error: "INTERNAL_ERROR",
       error_description: "Something went wrong",
      };
   
     }
+}
+
+//Matches list
+export async function ChallongeMatchesHelper(body: ChallongeRequest, tournamentId?: number )  {
+    const res: matchResType = await ChallongeHelper(body);
+    
+    /* Transform Data! */
+    if("data" in res){
+        return { data: res.data.map((m) =>({
+                challonge_match_id: m.id,
+                tournament_id: +tournamentId,
+                round: m.attributes.round,
+                player1_id: m.attributes.relationships.player1.data?.id,
+                player2_id: m.attributes.relationships.player2.data?.id,
+                winner_id: m.attributes.winner_id,
+                is_bye: !m.attributes.relationships.player1.data?.id || !m.attributes.relationships.player2.data?.id,
+                state: m.attributes.state,
+                scores: m.attributes.scores,
+                points_by_participant: m.attributes.points_by_participant,
+            }))}
+    } else {
+        /* Transform Error build! */
+        const [ error ] = res;
+
+        return {
+          error: error?.detail,
+          error_status: error?.status,
+          error_description:error?.source.pointer ,
+        };
+    }
+    
 }
 
 // -- TOURNAMENTS

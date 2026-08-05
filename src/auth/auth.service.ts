@@ -156,5 +156,4 @@ export async function AuthorizeChallongeResourceService(arg: { token: string}){
   }
 
 }
-
-/*  Discord Authorization Service*/
+ 
