@@ -13,7 +13,7 @@ tournamentRouter.route("/")
 tournamentRouter.route("/bulk_sync")
 .post(SyncTournamentsController)
 
-//Single Tournament: Update(admin) and Fetch(public);
+//Single Tournament:  Update(admin) and Fetch(public);
 tournamentRouter.route("/:tournament_id")
 .get(SingleTournamentController)
 //.delete(DeactivateTournamentController)

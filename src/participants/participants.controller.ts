@@ -4,7 +4,7 @@ import { ManualSyncFromChallongeParticipantsService, BulkUpdateParticipantsServi
 //Join Tournament controller: player
 export const CreateParticipantController = async (req: Request, res: Response, next: NextFunction) => {
    //Econst { tournament_id }urnament Id;
-   const { tournament_id } = req.query;
+   const { tournament_id } = req.body;
    const userId = req.userId;
    const { data } = req.body;
    

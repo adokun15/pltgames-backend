@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import {  SyncTournamentsService, ViewAllTournamentsService, ViewSingleTournamentService } from "./tournaments.service";
+import { asyncErrorHandler } from "@/utils/exceptions/asyncErrorHandler";
 
 //Join Tournament controller: super_admin
 /*export const CreateTournamentController = async (req: Request, res: Response, next: NextFunction) => {
@@ -31,28 +32,35 @@ import {  SyncTournamentsService, ViewAllTournamentsService, ViewSingleTournamen
 } 
 */
 
-export const AllTournamentsController = async (req: Request, res:Response, next: NextFunction) => {
-   const { page, per_page, state } = req.query;
+const sampleController = asyncErrorHandler(async (req: Request, res: Response, next: NextFunction) => {
+  JSON.parse('A string');
 
+  res.status(200).json({
+    response: 'successfull',
+    data: {
+      something: 2
+    }
+  });
+});
+export const AllTournamentsController = asyncErrorHandler(async (req: Request, res:Response, next: NextFunction) => {
+/*
+   const { page, per_page, state } = req.query;
   //Check per_page and page limit;
   if(page && Number(page) < 1 && Number(page) > 100){
     //Error Exceeded 
   }
-  
   if(Number(page) < 1 && Number(page) > 100){
     //Error Exceeded 
   }
+*/
 
-  try{
-    const tournaments = await ViewAllTournamentsService()
-    res.status(201).json({
+  const tournaments = await ViewAllTournamentsService()
+  res.status(201).json({
         status: true,
         data: tournaments 
     }) 
-}catch(e){
-    next(e)
-  }
-} 
+
+}) 
 
 export const SingleTournamentController = async (req: Request, res: Response, next: NextFunction) => {
    //Extract tournament Id;

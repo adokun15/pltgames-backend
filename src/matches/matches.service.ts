@@ -13,7 +13,7 @@ export async function BulkUpdateAllMatchesService(tournamentId?: number | null, 
   //By admin role; 
   let idsWithRound: idRound[] = []  
   //let idsWithRoundWithRoundLeft: number[] = []  
-
+ 
   if(tournamentId && rounds) {
     //Update only this data
     idsWithRound.push({ id:tournamentId, rounds: rounds }); 

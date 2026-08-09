@@ -47,6 +47,7 @@ export async function GetAllTournaments(filter?: TournamentsFilter) {
 
     return res.rows;
   } catch (e: any) {
+    
     console.error("GetAllTournaments error:", e);
     throw new Error("Failed to fetch tournaments");
   }
