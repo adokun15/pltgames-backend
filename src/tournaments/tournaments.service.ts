@@ -1,79 +1,59 @@
 //import { CreateTournamentType } from "@/utils/challonge/challongeTypes";
 
 import { ChallongeTournamentRequestHelper } from "@/utils/challonge/challongeRequestHelper";
-import { GetAllTournaments, GetSingleTournament, SyncBulkTournament } from "./repositories/tournament.repositories"
+import {
+  GetAllTournaments,
+  GetSingleTournament,
+  SyncBulkTournament,
+} from "./repositories/tournament.repositories";
 
-interface TournamentsFilter {
-  //search?: string,//Added Later
-  OrderBy?: string, //p.price
-  direction?: string | 'DESC',
-  offset?: number | 0,
-  limit?: number | 10
-}
-
-
-//Views: Public; 
-export async function ViewAllTournamentsService(filter?:TournamentsFilter ){
-   try{
-    const tournaments = await GetAllTournaments();
-    return { tournaments }
-   } catch (e){
-     console.log(e)
-     throw new Error(e)
-   }
+//Views: Public;
+export async function ViewAllTournamentsService(filter) {
+  const tournaments = await GetAllTournaments(filter);
+  return { tournaments };
 }
 
 //View Single Tournament
-export async function ViewSingleTournamentService(
-    tournamentId: string
-){
-    try{
-    const tournament = await GetSingleTournament(tournamentId);
-    return  tournament 
-    } catch (e){
-     console.log(e)
-     throw new Error(e)
-    }
+export async function ViewSingleTournamentService(tournamentId: string) {
+  const tournament = await GetSingleTournament(tournamentId);
+  return { tournament };
 }
 
-//CronJob (2twice, daily); 
-// / Manually (by super_admin);
-export async function SyncTournamentsService(){    
-    //Perform an transaction: get and update;
-    
+//CronJob (2twice, daily) or Manually (by super_admin);
+export async function SyncTournamentsService() {
+  //Perform an transaction: get and update;
+  //Check role
 
-    /*
+  //check last sync: must be up to an 1 hour;
+
+  /*
      per_page: 20
      page: 1
      created_before: ""
      created_after: ""
      state: "in_progess", "ended", "pending"
-    
     */
-    //From challonge pull 'active' tournament
-    const ts = await ChallongeTournamentRequestHelper({
+  //From challonge pull 'active' tournament
+  const ts = await ChallongeTournamentRequestHelper({
     path: `/tournaments.json`,
     authorization: process.env.CHALLONGE_APPLICATION_TOKEN,
-    authorization_version: "v1"
-    })
-    
-    if(!Array.isArray(ts)){
-        throw new Error(ts.error)
-    }
-    
-    //To Local db;
-    await SyncBulkTournament(ts)
+    authorization_version: "v1",
+  });
+
+  const data = await SyncBulkTournament(ts);
+  //To Local db;
+  return data;
 }
 
-//Views: private; / 
+//Views: private; /
 //export async function ViewAllUserTournamentsService(){}
 //export async function ViewUserTournamentService(){}
 
 //Action:  skipping
 //export async function CreateTournamentService(arg: CreateTournamentType){
-    //Talk to Challonge directly
- 
-    /* 
+//Talk to Challonge directly
+
+/* 
     This will be done manually on the Challonge App: 
     Organizer may submit their request to the challonge bot 
     which will be sent to another 'channel' gor me to approve;
@@ -81,8 +61,8 @@ export async function SyncTournamentsService(){
     By approving, i will sync the the game from 'challonge' to our local
     db for display;
     */
- 
-    /*{
+
+/*{
          keywords: data?.name?.split(" "),
          reports: [],
          tournamentId: data?.tournamentId,
