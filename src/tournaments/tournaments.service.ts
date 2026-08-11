@@ -35,7 +35,7 @@ export async function SyncTournamentsService() {
     */
   //From challonge pull 'active' tournament
   const ts = await ChallongeTournamentRequestHelper({
-    path: `/tournaments.json`,
+    path: `/tournaments.json?community_id=pltgames`,
     authorization: process.env.CHALLONGE_APPLICATION_TOKEN,
     authorization_version: "v1",
   });

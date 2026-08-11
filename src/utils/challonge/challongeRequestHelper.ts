@@ -1,3 +1,4 @@
+import { error } from "node:console";
 import ChallongeAPIError from "../exceptions/ChallongeError";
 import { handleChallongeResponse } from "./ChallongeErrorHandler";
 import {
@@ -71,51 +72,33 @@ export async function ChallongeUserRequestHelper(body: ChallongeRequest) {
 export async function ChallongeParticipantRequestHelper(
   body: ChallongeRequest,
 ) {
-  try {
-    const res = await ChallongeHelper(body);
+  const res = await ChallongeHelper(body);
 
-    if (!res) {
-      return {
-        error: "NO_RESPONSE",
-        error_description: "No response from Challonge",
-      };
-    }
+  if (res?.errors) {
+    return handleChallongeResponse(res.errors);
+  }
 
-    if (res.error) {
-      return {
-        error: res.error,
-        error_description: res.error_description || "Challonge error",
-      };
-    }
-
-    if (!Array.isArray(res.data)) {
-      return {
-        error: "INVALID_DATA",
-        error_description: "Unexpected data format",
-      };
-    }
-
-    const re_shaped = res?.data.map((p) => ({
-      challonge_participant_id: p?.id,
-      name: p.attributes.name,
-      seed: p.attributes?.seed,
-      group_id: p.attributes.group_id,
-      tournament_id: p.attributes.tournament_id,
-      username: p.attributes?.username,
-      final_rank: p.attributes?.final_rank,
-      misc: p.attributes?.misc,
-      isactive: p.attributes.states.active,
-    }));
-
-    return re_shaped as ParticipantBody[];
-  } catch (e) {
-    console.log(e);
-
+  if (!Array.isArray(res.data)) {
     return {
-      error: "INTERNAL_ERROR",
-      error_description: "Something went wrong",
+      error: "INVALID_DATA",
+      error_description: "Unexpected data format",
     };
   }
+
+  const re_shaped = res?.data.map((p) => ({
+    challonge_participant_id: p?.id,
+    seed: p.attributes?.seed,
+    group_id: p.attributes.group_id,
+    name: p.attributes.name,
+    final_rank: p.attributes?.final_rank,
+    isactive: p.attributes.states.active,
+    tournament_id: p.attributes.tournament_id,
+    username: p.attributes?.username,
+    misc: p.attributes?.misc,
+    last_updated: p.attributes?.updated_at,
+  }));
+
+  return re_shaped as ParticipantBody[];
 }
 
 //Bulk Update Participants
@@ -156,10 +139,9 @@ export async function ChallongeBulkParticipantHelper(body: ChallongeRequest) {
     }[];
   } catch (e) {
     console.log(e);
-
     return {
       error: "INTERNAL_ERROR",
-      error_description: "Something went wrong",
+      error_description: e?.message,
     };
   }
 }

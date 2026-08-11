@@ -1,88 +1,93 @@
 import { NextFunction, Request, Response } from "express";
-import { ManualSyncFromChallongeParticipantsService, BulkUpdateParticipantsService, CreateParticipantForTournamentService, FetchAllTournamentParticipantsService, FetchSingleTournamentParticipantService, LeaveParticipantAsTournamentService } from "./participants.service";
+import {
+  ManualSyncFromChallongeParticipantsService,
+  BulkUpdateParticipantsService,
+  CreateParticipantForTournamentService,
+  FetchAllTournamentParticipantsService,
+  FetchSingleTournamentParticipantService,
+  LeaveParticipantAsTournamentService,
+} from "./participants.service";
+import { asyncHandler } from "@/utils/middleware/error";
 
-//Join Tournament controller: player
-export const CreateParticipantController = async (req: Request, res: Response, next: NextFunction) => {
-   //Econst { tournament_id }urnament Id;
-   const { tournament_id } = req.body;
-   const userId = req.userId;
-   const { data } = req.body;
-   
-  try{
-    const participant = await CreateParticipantForTournamentService(data, tournament_id as string, userId)
+//Join Tournament controller player
+export const CreateParticipantController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+    const { data, tournament_id } = req.body;
+
+    //Validate Inputs;
+    const participant = await CreateParticipantForTournamentService(
+      data,
+      tournament_id as string,
+      userId,
+    );
+
+    console.log(participant);
     res.status(201).json({
-        status: true,
-        data: { participant }
-    }) 
-}catch(e){
-    next(e)
-  }
-} 
+      status: true,
+      data: participant,
+    });
+  },
+);
 
 //LEAVE tOURNAMENT; player
-export const LeaveTournamentAsParticipantController = async (req: Request, res: Response, next: NextFunction) => {
-   //Extract tournament Id;
-   const { tournament_id } = req.query;
-   const { participant_id, username } = req.params;
-   
-  //Parse and check if parameters are valid;
-  if(!tournament_id){};
+export const LeaveTournamentAsParticipantController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+    const { tournament_id } = req.body;
+    const { username } = req.params;
 
-  try{
-    const info = await LeaveParticipantAsTournamentService( participant_id as string, tournament_id as string, username as string)
+    //validate input;
+
+    const info = await LeaveParticipantAsTournamentService(
+      tournament_id as string,
+      username as string,
+      userId,
+    );
     res.status(201).json({
-        status: true,
-        data: { message: info }
-    }) 
-}catch(e){
-    next(e)
-  }
-} 
+      status: true,
+      data: info,
+    });
+  },
+);
 
+export const AllParticipantsController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { tournament_id, page, per_page } = req.query;
 
-export const AllParticipantsController = async (req: Request, res:Response, next: NextFunction) => {
-   const { tournament_id } = req.query;
-   const { page, per_page} = req.query;
+    //validate query's and tournament id
 
-   //Check if tournament_id query is a number!!
+    const participants = await FetchAllTournamentParticipantsService(
+      tournament_id as string,
+      { page: page as string, per_page: per_page as string },
+    );
 
-  //Check per_page and page limit;
-  if(page && Number(page) < 1 && Number(page) > 100){
-    //Error Exceeded 
-  }
-  
-  if(Number(page) < 1 && Number(page) > 100){
-    //Error Exceeded 
-  }
+    res.status(200).json({
+      status: true,
+      data: participants,
+    });
+  },
+);
 
-  try{
-    const participants = await FetchAllTournamentParticipantsService(tournament_id as string, { page: page as string, per_page: per_page as string})
-    res.status(201).json({
-        status: true,
-        data: participants 
-    }) 
-}catch(e){
-    next(e)
-  }
-} 
+export const SingleParticipantController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    //Extract tournament Id;
+    const { tournament_id } = req.query;
+    const { username } = req.params;
 
-export const SingleParticipantController = async (req: Request, res: Response, next: NextFunction) => {
-   //Extract tournament Id;
-   const { tournament_id } = req.query;
-   const { participant_id } = req.params;
-   
-   //Check if tournament_id and participant_id query is a number 
+    //Check if tournament_id and participant_id query is a number
 
-  try{
-    const single_participant = await FetchSingleTournamentParticipantService(tournament_id as string, participant_id as string)
-    res.status(201).json({
-        status: true,
-        data: single_participant 
-    }) 
-}catch(e){
-    next(e)
-  }
-} 
+    const single_participant = await FetchSingleTournamentParticipantService(
+      tournament_id as string,
+      username as string,
+    );
+
+    res.status(200).json({
+      status: true,
+      data: single_participant,
+    });
+  },
+);
 
 /*
 //Possible to update once by authorizes user;
@@ -104,40 +109,27 @@ export const UpdateParticipantController = async (req: Request, res:Response, ne
 } 
 */
 
-/*CRON JOBS*/
-export const BulkParticipantsUpdateController = async (req: Request, res:Response, next: NextFunction) => {
-   //Extract params;
-   const { participant_ids } = req.body;
-   const { tournament_id } = req.query;
-   
-  //Parse and check if parameters are valid;
-  if(!tournament_id ){
-    //Throw error;
-  }
+/*CRON JOBS/admin*/
+export const BulkParticipantsUpdateController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    //Authorize: Check
 
-  try{
-    const participant = await BulkUpdateParticipantsService()
-    res.status(201).json({
-        status: true,
-        data: { message: 'success' }
-    }) 
-}catch(e){
-    next(e)
-  }
-} 
+    //Check user roles
+    const participants = await BulkUpdateParticipantsService();
+    res.status(200).json({
+      status: true,
+      data: participants,
+    });
+  },
+);
 
-
-export const ManualSyncParticipantsController = async (req: Request, res:Response, next: NextFunction) => {
-   //Use Special aut middleware for this
-   
-   //Use bot to manual sync this; application_tokeno' 
-   try{
-    const sync_participants = await ManualSyncFromChallongeParticipantsService()
-    res.status(201).json({
-        status: true,
-        data: { sync_participants }
-    }) 
-}catch(e){
-    next(e)
-  }
-} 
+export const ManualSyncParticipantsController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const synced_participants =
+      await ManualSyncFromChallongeParticipantsService();
+    res.status(200).json({
+      status: true,
+      data: synced_participants,
+    });
+  },
+);

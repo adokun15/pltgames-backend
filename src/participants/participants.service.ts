@@ -12,6 +12,7 @@ import {
   GetAllParticipants,
   GetSingleParticipant,
   LeaveParticipant,
+  SyncBulkParticipant,
 } from "./repositories/participants.repositories";
 import {
   GetAllTournaments,
@@ -20,6 +21,8 @@ import {
 import { GetUserFromDb } from "@/users/repositories/users.repository";
 import ChallongeAPIError from "@/utils/exceptions/ChallongeError";
 import NotFoundError from "@/utils/exceptions/NotFound";
+import ValidationError from "@/utils/exceptions/ValidationError";
+import BaseError from "@/utils/exceptions/baseError";
 
 /* Join: Add data to database first: user/player role*/
 export async function CreateParticipantForTournamentService(
@@ -30,20 +33,26 @@ export async function CreateParticipantForTournamentService(
   //Get the user
   const user = await GetUserFromDb(userId);
 
-  if (!user) {
-    throw new NotFoundError("Can not join the tournament. Account not found!");
-  }
-
   //Get username from register users
   const { username } = user;
 
-  const { name, misc } = participant;
+  const { name } = participant;
+
+  //Check if user exist and is 'added'
+  const existing_participant = await GetSingleParticipant({
+    tournamentId: +tournament_id,
+    p_username: username,
+  });
+
+  if (existing_participant && existing_participant.status === "added") {
+    throw new ValidationError({}, "This participants has already been added!");
+  }
 
   //Add to local db first: status: 'pending'
   const p = await CreateParticipant({
     tournamentId: tournament_id,
     p_name: name,
-    p_meta: misc,
+    p_meta: participant?.misc || null,
     p_username: username,
   });
 
@@ -52,24 +61,28 @@ export async function CreateParticipantForTournamentService(
 
 /* Leave: remove data from database first: user/player role*/
 export async function LeaveParticipantAsTournamentService(
-  participant_id: string,
   tournament_id: string,
+  username?: string,
   userId?: string,
 ) {
-  //check tournament state first;
-  const tournament = await GetSingleTournament(tournament_id);
+  const existing_participant = await GetSingleParticipant({
+    tournamentId: +tournament_id,
+    p_username: username,
+  });
+  console.log(existing_participant);
 
-  //400 - Bad request
-  if (
-    !tournament ||
-    tournament?.state === "completed" ||
-    tournament?.state === "in_progress"
-  ) {
-    //Throw 'Partic
+  if (existing_participant && existing_participant.status === "added") {
+    //Check tournament state
+    const t = await GetSingleTournament(tournament_id);
+
+    //400 - Bad request
+    if (t && (t.state !== "pending" || t.state !== "checking_in")) {
+      throw new ValidationError({}, "User is already in the tournament!");
+    }
   }
 
   //Get the user
-  const user = await GetUserFromDb(userId); //username;
+  const user = await GetUserFromDb(userId);
 
   //404 - not found
   if (!user) {
@@ -77,12 +90,16 @@ export async function LeaveParticipantAsTournamentService(
   }
 
   //Get username from register users
-  const { username } = user;
+  const { username: user_name_from_db } = user;
+
+  //verify it matches
+  if (user_name_from_db !== username) {
+    throw new BaseError("AUTH_ERROR", 401, false, "Unauthorized access!");
+  }
 
   //then decide what happens
   const p = await LeaveParticipant({
     tournamentId: tournament_id,
-    p_id: participant_id,
     p_username: username,
   });
 
@@ -94,108 +111,100 @@ export async function LeaveParticipantAsTournamentService(
 /* Player: Update data limit(1) can only update once*/
 //export async function UpdateSingleParticipantForTournamentService(arg: {participant_id: string, data: {name: string}, tournament_id: string}){}
 
-//Automatically clean up db- batch update to challonge;
+//Automatically clean up db - batch update to challonge; every sunday;
 export async function BulkCleanUpParticipantsService() {
-  //Check for unsynced data via status = 'pending' from local db;
-  try {
-    const users = await CleanupParticipants();
-    //log id, username to discord log
-    console.log(users);
-  } catch (e) {
-    console.log(e);
+  //participants who 'left' over 'a week ago';
+  const users = await CleanupParticipants();
+
+  if (!users) {
+    // NO participants left for that week. Log to discord!
   }
+
+  //log id, username, tournament to discord log
 }
 
 export async function BulkUpdateParticipantsService() {
-  //Check for unsynced data via status = 'pending' from local db;
-  try {
-    const participants = await GetAllBulkParticipants({ status: "pending" });
+  //Check user Role!
 
-    if (participants.length === 0) {
-      //lOG TO dISCORD!
-      return {
-        message: "All data are synced and update to date!",
-      };
+  //Check for atleast 256 via 'pending' status with latest 'update';
+  const participants = await GetAllBulkParticipants();
+  /*
+    [{t_id: 1, t_name: tourney 1}, {t_id: 2, t_name: tourney 2}]
+    { 1:{ t_name: tourney 1}, 2: { t_name: tourney 2} }
+    */
+  if (!participants) return [];
+
+  //participants array
+  const tp = participants.reduce((acc, participant) => {
+    const { tournament_id, name, username, misc } = participant;
+
+    if (!acc[tournament_id]) {
+      acc[tournament_id] = [];
     }
 
-    //Group participants list by 'tournament_id'
-    let obj = {} as {
-      tournament_id: {
-        name: string;
-        seed: number;
-        misc: string;
-        email: string;
-        username: string;
-      };
-    };
+    acc[tournament_id].push({ name, username, misc });
 
-    participants.forEach((element) => {
-      const { tournament_id, ...others } = element;
-      obj[tournament_id] = others;
-    });
+    return acc;
+  }, {});
 
-    if (!obj) return;
+  let participant_log = [];
 
-    const data_log = [];
-
-    //Update batches by tournament id
-    Object.entries(obj).forEach(async ([tournament, p]) => {
-      await ChallongeParticipantRequestHelper({
-        method: "POST",
-        path: `/tournaments/${tournament}/participants.json`,
-        authorization: process.env.CHALLONGE_APPLICATION_TOKEN,
-        authorization_version: "v1",
-        body_content: {
-          data: {
-            type: "Participants",
-            attributes: {
-              participants: {
-                name: p?.name,
-                seed: p?.seed,
-                misc: p?.misc,
-                email: p?.email,
-                username: p?.username,
-              },
-            },
-          },
+  //Update batches by tournament id
+  for (const [tournament, participants] of Object.entries(tp)) {
+    const pl = await ChallongeParticipantRequestHelper({
+      method: "POST",
+      path: `/tournaments/${tournament}/participants/bulk_add.json?community_id=${process.env.CHALLONGE_CLIENT_COMMUNITY_ID}`,
+      authorization: process.env.CHALLONGE_APPLICATION_TOKEN,
+      authorization_version: "v1",
+      body_content: {
+        data: {
+          type: "Participants",
+          attributes: { participants },
         },
-      });
+      },
     });
 
-    //Logged Data to a Discord server
-    console.log(data_log);
-  } catch (e) {
-    console.log(e);
+    if (+pl?.status === 404) {
+      throw new NotFoundError(pl?.detail);
+    }
+    
+    participant_log.push(pl)// 2d Array;
   }
+
+  //Transform, 2d array to 1d
+  const flattenedArray = participant_log.flat();
+
+  //Update new local database;
+  const synced = await SyncBulkParticipant(flattenedArray);
+  return synced;
 }
 
 //Sync All From challonge to local database; per tournament update
 export async function ManualSyncFromChallongeParticipantsService() {
-  //Get "active" tournament from db;
-  /* Default date is 1 week back */
-  /* per_page */
+  
+  //UPCOMING TOURNAMENT!
   const tournaments = await GetAllTournaments({
-    state: "active",
-    created_after: new Date(),
+    state: "pending", 
+    limit: 25,
+    orderBy: 'updated_at'
   });
-
-  if (tournaments.length === 0) return;
-
-  tournaments.forEach(async (t) => {
-    //if(t.current_participants_count >= t.max_signup) return;
-
-    //Fetch all participants from the tournaments list
-    const p = await ChallongeParticipantRequestHelper({
-      path: `/tournaments/${t.challonge_tournament_id}/participants.json?per_page=${t.max_signup}&page=0`,
+  
+  //Call per
+  for (const t of tournaments) {
+    //Fetch all participants from each tournament
+    const pl = await ChallongeParticipantRequestHelper({
+      path: `/tournaments/${t.challonge_tournament_id}/participants.json?community_id=${process.env.CHALLONGE_CLIENT_COMMUNITY_ID}&per_page=${t.max_signup}&page=0`,
       authorization: process.env.CHALLONGE_APPLICATION_TOKEN,
       authorization_version: "v1",
     });
-
-    //filter and check challonge_updated_date is newer the db, update data;
-
-    //Insert and update tournament participants
-    //await UpdateBulkParticipants(p)
-  });
+    
+     if (+pl?.status === 404) {
+        throw new NotFoundError(pl?.detail);
+      }
+    
+    //Upload Challonge data is fresh
+    await SyncBulkParticipant(pl);
+  }
 }
 
 //Get all participants of a tournament
@@ -215,16 +224,11 @@ export async function FetchAllTournamentParticipantsService(
 //Get single participant of a tournament
 export async function FetchSingleTournamentParticipantService(
   tournament_id: string,
-  participant_id: string,
+  participant: string,
 ) {
-  try {
-    const p = await GetSingleParticipant({
-      tournamentId: +tournament_id,
-      p_id: +participant_id,
-    });
-    return p;
-  } catch (e) {
-    console.log(e);
-    throw new Error(e);
-  }
+  const p = await GetSingleParticipant({
+    tournamentId: +tournament_id,
+    p_username: participant,
+  });
+  return p;
 }
