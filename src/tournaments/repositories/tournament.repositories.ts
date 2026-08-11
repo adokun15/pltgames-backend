@@ -19,6 +19,21 @@ const ORDERABLE_FIELDS = {
   name: "name",
 };
 
+export async function GetAllBulkActiveTournaments() {
+  try {
+    const res = await pool.query(`
+      SELECT *
+      FROM tournaments 
+      ORDER BY update_at desc
+      OFFSET 0
+      LIMIT 10
+      `);
+    return res.rows;
+  } catch (e) {
+    handlePgError(e);
+  }
+}
+
 export async function GetAllTournaments(filter?: TournamentsFilter) {
   //Set default query value
   const {
