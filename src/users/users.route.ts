@@ -1,15 +1,17 @@
 //Routers for users;
 import { Router } from 'express';
-import { GetUserController, LoginUserController } from './users.controller.js';
+import { GetSingleUserInfoController, GetUserController } from './users.controller.js';
+import { AuthorizationClientRequest } from '@/utils/middleware/auth.js';
 
-const router = Router();
+const UserRouter = Router();
 
-//With Auth Token FROM CHALLONGE API
-router.route('/users')
-//Authorize
-.get(GetUserController)
-//Login
-.post(LoginUserController)
+//With Session Token FROM CHALLONGE API
+UserRouter.route('/')
+.get(AuthorizationClientRequest, GetUserController)
+
+//Public: Rate limit
+UserRouter.route('/:username')
+.get(GetSingleUserInfoController)
 
 
-export default router;
+export default UserRouter; 

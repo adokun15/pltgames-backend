@@ -1,13 +1,12 @@
 //Routers for users;
 import { Router } from 'express';
-import { AuthCodeController, RefreshAccessTokenController } from './auth.controller';
+import { AuthCodeController } from './auth.controller';
 
-const router = Router();
+const AuthRouter = Router();
 
 //With Auth Token FROM CHALLONGE API
-router.route('/oauth/code').post(AuthCodeController)
+AuthRouter.route('/challonge/:code').post(AuthCodeController)
 
-//Refresh token
-router.route('/oauth/refresh_token').post(RefreshAccessTokenController)
-
-export default router;
+//Discord api;
+//AuthRouter.route('/discord/:code')
+export default AuthRouter;

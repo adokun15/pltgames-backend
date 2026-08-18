@@ -1,4 +1,5 @@
-SELECT * FROM matches;DO $$
+SELECT * FROM matches;
+DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_type WHERE typname = 'match_state_type'
