@@ -40,7 +40,7 @@ import {
 //import { errorHandler, methodNotAllowedHandler, notFoundHandler } from './middleware/errorhandler.middleware';
 
 const app = express();
-const PORT = 3000;
+const PORT = 8080;
 
 dotenv.config({ path: ".env.local" });
 

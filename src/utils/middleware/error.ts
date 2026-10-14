@@ -15,8 +15,9 @@ export function errorResponseHandler(
     error.constructor.name === "SyntaxError"
       ? false
       : true;
+
   res.status(error.statusCode || 500).json({
-    response: "Error",
+    status: false,
     error: {
       type: customError === false ? "UnhandledError" : error.constructor.name,
       path: req.path,
